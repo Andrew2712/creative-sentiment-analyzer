@@ -132,7 +132,7 @@ with col2:
                 st.info("💡 Suggested Positive Version:")
                 st.write(positive_version)
                 if enable_audio:
-                    speak_text(Your Suggested Positive Version, positive_version)
+                    speak_text("Your Suggested Positive Version", positive_version)
             if enable_animations:
                 st.snow()
         else:

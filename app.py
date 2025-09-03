@@ -2,7 +2,9 @@ import streamlit as st
 from textblob import TextBlob
 from nltk.corpus import wordnet
 import nltk
-import pyttsx3
+from PIL import Image
+from gtts import gTTS
+import os
 
 # Download WordNet
 nltk.download('wordnet', quiet=True)
@@ -40,66 +42,67 @@ def sentiment_analysis(text):
         return "NEUTRAL", 0
 
 def speak_text(text):
-    engine = pyttsx3.init()
-    engine.say(text)
-    engine.runAndWait()
+    """Generate audio using gTTS and play in Streamlit"""
+    try:
+        tts = gTTS(text=text, lang='en')
+        tts.save("temp.mp3")
+        audio_file = open("temp.mp3", "rb")
+        st.audio(audio_file.read(), format="audio/mp3")
+        audio_file.close()
+        os.remove("temp.mp3")
+    except Exception as e:
+        st.warning("🔊 Audio feedback not available in this environment.")
 
 # -----------------------------
-# Streamlit Page Config
+# Streamlit Page Config & Styling
 # -----------------------------
 st.set_page_config(page_title="Creative Sentiment Analyzer", page_icon="💬", layout="wide")
 
-# -----------------------------
-# Sidebar: Theme & Settings
-# -----------------------------
-st.sidebar.header("Settings")
-show_positive_suggestion = st.sidebar.checkbox("Show Positive Suggestions", True)
-enable_animations = st.sidebar.checkbox("Enable Fun Animations", True)
-theme_choice = st.sidebar.radio("Theme", ["Light", "Dark"])
+# Background image
+def set_bg(png_file):
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+        background-image: url("data:image/png;base64,{open(png_file, "rb").read().encode("base64").decode()}");
+        background-size: cover;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-# -----------------------------
-# Theme CSS
-# -----------------------------
-if theme_choice == "Dark":
-    gradient_bg = "linear-gradient(to bottom right, #1e1e1e, #333333);"
-    card_bg = "#333333"
-    text_color = "white"
-    positive_bg = "#145214"
-    negative_bg = "#7a1414"
-    neutral_bg = "#665c00"
-else:
-    gradient_bg = "linear-gradient(to bottom right, #f0f8ff, #cce7ff);"
-    card_bg = "#f0f8ff"
-    text_color = "black"
-    positive_bg = "#d4edda"
-    negative_bg = "#f8d7da"
-    neutral_bg = "#fff3cd"
+# If you have background image file
+# set_bg("background.png")  # Uncomment if background image is available
 
-st.markdown(f"""
+st.markdown("""
 <style>
-body {{
-    background: {gradient_bg};
-    color: {text_color};
-}}
-.stButton>button {{
+body {
+    background-color: #f0f8ff;
+}
+h1 {
+    color: #ff4b4b;
+}
+.stButton>button {
     background-color: #4CAF50;
     color: white;
     height: 3em;
     width: 100%;
     font-size: 16px;
-}}
-div.stTextArea>div>textarea {{
-    background-color: {card_bg};
-    color: {text_color};
-}}
+}
 </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------
-# App Title
-# -----------------------------
 st.title("💬 Creative Sentiment Analyzer")
 st.markdown("Type your sentence and get instant sentiment analysis with **positive suggestions** and audio feedback!")
+
+# -----------------------------
+# Sidebar
+# -----------------------------
+st.sidebar.header("Settings")
+show_positive_suggestion = st.sidebar.checkbox("Show Positive Suggestions", True)
+enable_animations = st.sidebar.checkbox("Enable Fun Animations", True)
+enable_audio = st.sidebar.checkbox("Enable Audio Feedback", True)
 
 # -----------------------------
 # Main Layout
@@ -116,25 +119,25 @@ with col2:
         sentiment_label, score = sentiment_analysis(user_input)
         
         if sentiment_label == "POSITIVE":
-            st.markdown(f"<div style='padding:10px; background-color:{positive_bg}; border-radius:10px'>😊 Positive ({score}%)</div>", unsafe_allow_html=True)
-            response_text = "Great! Keep it up!"
-            st.info(f"💬 Response: {response_text}")
-            speak_text(response_text)  # Audio feedback for positive text
+            st.markdown(f"<div style='padding:10px; background-color:#d4edda; border-radius:10px'>😊 Positive ({score}%)</div>", unsafe_allow_html=True)
+            if enable_audio:
+                speak_text("Great! Your sentence is positive!")
             if enable_animations:
                 st.balloons()
-
         elif sentiment_label == "NEGATIVE":
-            st.markdown(f"<div style='padding:10px; background-color:{negative_bg}; border-radius:10px'>😡 Negative ({score}%)</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='padding:10px; background-color:#f8d7da; border-radius:10px'>😡 Negative ({score}%)</div>", unsafe_allow_html=True)
             if show_positive_suggestion:
                 positive_version = make_positive_sentence(user_input)
                 st.info("💡 Suggested Positive Version:")
                 st.write(positive_version)
-                speak_text(positive_version)  # Audio feedback for positive suggestion
+                if enable_audio:
+                    speak_text(positive_version)
             if enable_animations:
                 st.snow()
-
         else:
-            st.markdown(f"<div style='padding:10px; background-color:{neutral_bg}; border-radius:10px'>😐 Neutral</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='padding:10px; background-color:#fff3cd; border-radius:10px'>😐 Neutral</div>", unsafe_allow_html=True)
+            if enable_audio:
+                speak_text("Your sentence is neutral.")
     else:
         st.warning("⚠️ Please enter some text first!")
 

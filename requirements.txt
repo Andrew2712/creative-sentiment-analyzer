@@ -2,6 +2,6 @@ streamlit
 textblob
 nltk
 Pillow
-pyttsx3
+gTTS
 wordcloud
 matplotlib

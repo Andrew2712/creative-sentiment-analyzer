@@ -127,6 +127,7 @@ with col2:
         elif sentiment_label == "NEGATIVE":
             st.markdown(f"<div style='padding:10px; background-color:#f8d7da; border-radius:10px'>😡 Negative ({score}%)</div>", unsafe_allow_html=True)
             if show_positive_suggestion:
+                speak_text("Oop's! Your sentence is negative!")
                 positive_version = make_positive_sentence(user_input)
                 st.info("💡 Suggested Positive Version:")
                 st.write(positive_version)

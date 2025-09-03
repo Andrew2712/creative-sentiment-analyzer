@@ -1,3 +1,7 @@
 streamlit
-transformers
-torch
+textblob
+nltk
+Pillow
+pyttsx3
+wordcloud
+matplotlib
